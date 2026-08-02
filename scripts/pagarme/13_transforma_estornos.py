@@ -51,10 +51,25 @@ def transformar_estornos_pagarme():
         try:
             print(f"📄 Lendo: {nome_base}{extensao_encontrada}")
 
-            coluna_data = 'Canceled_Date' if 'Canceled_Date' in df.columns else 'Created_Date'
+            if 'Canceled_Date' in df.columns:
+                coluna_data = 'Canceled_Date'
+                formato_data = '%d/%m/%Y %H:%M'
+            elif 'Created_Date' in df.columns:
+                coluna_data = 'Created_Date'
+                formato_data = '%d/%m/%Y %H:%M'
+            elif 'Data' in df.columns:
+                print(f"   ℹ️  Colunas 'Canceled_Date' e 'Created_Date' não existem no arquivo {nome_base}")
+                print(f"   Colunas disponíveis: {list(df.columns)}")
+                print(f"   → Usando coluna 'Data' como origem")
+                coluna_data = 'Data'
+                formato_data = '%d/%m/%Y %H:%M:%S'
+            else:
+                print(f"   ℹ️  Colunas 'Canceled_Date' e 'Created_Date' não existem no arquivo {nome_base}")
+                print(f"   Colunas disponíveis: {list(df.columns)}")
+                continue
 
             df['Data'] = pd.to_datetime(
-                df[coluna_data], format='%d/%m/%Y %H:%M', errors='coerce'
+                df[coluna_data], format=formato_data, errors='coerce'
             ).dt.strftime('%d/%m/%Y')
 
             df['EC'] = ec_name
