@@ -52,6 +52,29 @@ def transformar_vendas_pagarme():
         try:
             print(f"📄 Lendo: {nome_base}{extensao_encontrada}")
 
+            # REGRA 1: Identificar e normalizar a coluna de data
+            # O arquivo pode ter 'Paid_Date' ou 'Data' como nome da coluna
+            coluna_data = None
+            
+            # Lista de possíveis nomes para a coluna de data
+            possiveis_colunas_data = ['Paid_Date', 'Data', 'paid_date', 'data']
+            
+            for col in possiveis_colunas_data:
+                if col in df.columns:
+                    coluna_data = col
+                    break
+            
+            if coluna_data is None:
+                print(f"⚠ Coluna de data não encontrada no arquivo {nome_base}")
+                print(f"   Colunas disponíveis: {list(df.columns)}")
+                # Se não encontrar, pular este arquivo
+                continue
+            
+            # Se a coluna encontrada não for 'Paid_Date', renomear para padronizar
+            if coluna_data != 'Paid_Date':
+                print(f"   ℹ️  Renomeando coluna '{coluna_data}' para 'Paid_Date'")
+                df['Paid_Date'] = df[coluna_data]
+            
             df = normalizar_data(
                 df,
                 coluna_origem='Paid_Date',
