@@ -75,8 +75,45 @@ def transformar_estornos_pagarme():
             df['EC'] = ec_name
             df['Adquirente'] = 'Pagar.me'
 
+            # Tratamento das colunas do arquivo .es (nomes em português)
+            # O pipeline padrão espera Payment_Method, Card_Brand, Installments
+            # e Refunded_Amount. No arquivo .es os nomes vêm em português.
+            if 'Payment_Method' not in df.columns and 'Forma de Pagamento' in df.columns:
+                print(f"   ℹ️  Coluna 'Payment_Method' não existe no arquivo {nome_base}")
+                print(f"   → Usando coluna 'Forma de Pagamento' como origem")
+                mapa_forma_pagamento = {
+                    'pix': 'pix',
+                    'boleto': 'boleto',
+                    'cartão de crédito': 'credit_card',
+                    'cartao de credito': 'credit_card',
+                }
+                df['Payment_Method'] = (
+                    df['Forma de Pagamento'].astype(str).str.strip().str.lower()
+                    .map(mapa_forma_pagamento)
+                    .fillna(df['Forma de Pagamento'].astype(str).str.strip().str.lower())
+                )
+
+            if 'Card_Brand' not in df.columns:
+                if 'Bandeira do Cartão' in df.columns:
+                    print(f"   ℹ️  Coluna 'Card_Brand' não existe no arquivo {nome_base}")
+                    print(f"   → Usando coluna 'Bandeira do Cartão' como origem")
+                    df['Card_Brand'] = df['Bandeira do Cartão']
+                elif 'Bandeira' in df.columns:
+                    print(f"   ℹ️  Coluna 'Card_Brand' não existe no arquivo {nome_base}")
+                    print(f"   → Usando coluna 'Bandeira' como origem")
+                    df['Card_Brand'] = df['Bandeira']
+
+            if 'Installments' not in df.columns and 'Número de Parcelas' in df.columns:
+                print(f"   ℹ️  Coluna 'Installments' não existe no arquivo {nome_base}")
+                print(f"   → Usando coluna 'Número de Parcelas' como origem")
+                df['Installments'] = df['Número de Parcelas']
+
             if 'Refunded_Amount' in df.columns:
                 df = converter_centavos_para_reais(df, ['Refunded_Amount'])
+            elif 'Valor (R$)' in df.columns:
+                print(f"   ℹ️  Coluna 'Refunded_Amount' não existe no arquivo {nome_base}")
+                print(f"   → Usando coluna 'Valor (R$)' (já em reais) como origem")
+                df['Refunded_Amount'] = pd.to_numeric(df['Valor (R$)'], errors='coerce')
 
             # Salvar sempre como .xlsx
             salvar_arquivo_excel_ou_csv(df, output_path, index=False)

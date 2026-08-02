@@ -76,6 +76,41 @@ def transformar_vendas_pagarme():
             df['EC'] = ec_name
             df['Adquirente'] = 'Pagar.me'
 
+            # Tratamento das colunas do arquivo .es (nomes em português)
+            # O pipeline padrão espera Payment_Method, Card_Brand, Installments
+            # e Paid_Amount_In_Cents. No arquivo .es os nomes vêm em português.
+            if 'Payment_Method' not in df.columns and 'Forma de Pagamento' in df.columns:
+                print(f"   ℹ️  Coluna 'Payment_Method' não existe no arquivo {nome_base}")
+                print(f"   → Usando coluna 'Forma de Pagamento' como origem")
+                mapa_forma_pagamento = {
+                    'pix': 'pix',
+                    'boleto': 'boleto',
+                    'cartão de crédito': 'credit_card',
+                    'cartao de credito': 'credit_card',
+                }
+                df['Payment_Method'] = (
+                    df['Forma de Pagamento'].astype(str).str.strip().str.lower()
+                    .map(mapa_forma_pagamento)
+                    .fillna(df['Forma de Pagamento'].astype(str).str.strip().str.lower())
+                )
+
+            if 'Card_Brand' not in df.columns:
+                if 'Bandeira do Cartão' in df.columns:
+                    print(f"   ℹ️  Coluna 'Card_Brand' não existe no arquivo {nome_base}")
+                    print(f"   → Usando coluna 'Bandeira do Cartão' como origem")
+                    df['Card_Brand'] = df['Bandeira do Cartão']
+                elif 'Bandeira' in df.columns:
+                    print(f"   ℹ️  Coluna 'Card_Brand' não existe no arquivo {nome_base}")
+                    print(f"   → Usando coluna 'Bandeira' como origem")
+                    df['Card_Brand'] = df['Bandeira']
+
+            if 'Paid_Amount_In_Cents' not in df.columns and 'Valor (R$)' in df.columns:
+                print(f"   ℹ️  Coluna 'Paid_Amount_In_Cents' não existe no arquivo {nome_base}")
+                print(f"   → Convertendo 'Valor (R$)' (reais) para centavos")
+                df['Paid_Amount_In_Cents'] = (
+                    pd.to_numeric(df['Valor (R$)'], errors='coerce') * 100
+                ).round().astype('Int64')
+
             # REGRA 2: Validar quantidade de parcelas (obrigatório para vendas)
             # A coluna 'Installments' deve existir nos dados do Pagar.me
             # Identificar a coluna de parcelas (pode ser 'Installments' ou 'Número de Parcelas')
@@ -84,6 +119,13 @@ def transformar_vendas_pagarme():
                 if col in df.columns:
                     coluna_parcelas = col
                     break
+
+            # Garantir que exista 'Installments' (nome esperado pelas etapas seguintes)
+            if 'Installments' not in df.columns and coluna_parcelas is not None:
+                print(f"   ℹ️  Coluna 'Installments' não existe no arquivo {nome_base}")
+                print(f"   → Usando coluna '{coluna_parcelas}' como origem")
+                df['Installments'] = df[coluna_parcelas]
+                coluna_parcelas = 'Installments'
 
             if coluna_parcelas:
                 # Contar registros sem quantidade de parcelas ANTES de corrigir
