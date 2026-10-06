@@ -1,15 +1,21 @@
 # Configurações centralizadas do pipeline ETL Adquirentes
 
 # Caminhos base
+# PATHS = {
+#     'input': "/content/drive/MyDrive/GRAN/Revenue Assurance/Dash/Backend Adq/",
+#     'temp': "/content/drive/MyDrive/GRAN/Revenue Assurance/Dash/Temp Adq/",
+#     'output': "/content/drive/MyDrive/GRAN/Revenue Assurance/Dash/AGREGADO CONSOLIDADO/"
+# }
+
 PATHS = {
-    'input': "/content/drive/MyDrive/GRAN/Revenue Assurance/Dash/Backend Adq/",
-    'temp': "/content/drive/MyDrive/GRAN/Revenue Assurance/Dash/Temp Adq/",
-    'output': "/content/drive/MyDrive/GRAN/Revenue Assurance/Dash/AGREGADO CONSOLIDADO/"
+    'input': "/content/drive/Shareddrives/Revenue Assurance/Dash/Acompanhento Adquirentes/Backend Adq/",
+    'temp': "/content/drive/Shareddrives/Revenue Assurance/Dash/Acompanhento Adquirentes/Temp Adq/",
+    'output': "/content/drive/Shareddrives/Revenue Assurance/Dash/Acompanhento Adquirentes/AGREGADO CONSOLIDADO/"
 }
 
 # Google Sheets
 GOOGLE_SHEETS = {
-    'spreadsheet_id': "17TZuQKuZvB2onQgqKtliwIk9tGOLW4olrzk--wCM25Y",
+    'spreadsheet_id': "1PdRMOoitt0HMXnPbU0Jsd3BVU3u8OjWNESWvHIYta4A",
     'sheet_name': "Adquirentes"
 }
 
