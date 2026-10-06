@@ -73,7 +73,7 @@ def consolidar_vendas_pagarme():
     merged_df['Status'] = (
         merged_df['Status'].astype(str).str.lower().map(STATUS_PAGARME)
     )
-    merged_df['Status'].fillna('Aprovada', inplace=True)
+    merged_df['Status'] = merged_df['Status'].fillna('Aprovada')
 
     merged_df.rename(columns={
         'Card_Brand': 'Bandeira',

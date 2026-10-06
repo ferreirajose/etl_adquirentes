@@ -110,6 +110,10 @@ def transformar_estornos_pagarme():
 
             if 'Refunded_Amount' in df.columns:
                 df = converter_centavos_para_reais(df, ['Refunded_Amount'])
+            elif 'Valor Estornado (R$)' in df.columns:
+                print(f"   ℹ️  Coluna 'Refunded_Amount' não existe no arquivo {nome_base}")
+                print(f"   → Usando coluna 'Valor Estornado (R$)' (já em reais) como origem")
+                df['Refunded_Amount'] = pd.to_numeric(df['Valor Estornado (R$)'], errors='coerce')
             elif 'Valor (R$)' in df.columns:
                 print(f"   ℹ️  Coluna 'Refunded_Amount' não existe no arquivo {nome_base}")
                 print(f"   → Usando coluna 'Valor (R$)' (já em reais) como origem")
