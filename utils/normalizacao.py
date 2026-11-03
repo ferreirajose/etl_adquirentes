@@ -25,11 +25,46 @@ def converter_centavos_para_reais(df, colunas):
     return df
 
 
+FORMATOS_DATA_FALLBACK = [
+    '%d/%m/%Y %H:%M:%S',
+    '%d/%m/%Y %H:%M',
+    '%d/%m/%Y',
+    '%Y-%m-%d %H:%M:%S',
+    '%Y-%m-%d %H:%M',
+    '%Y-%m-%dT%H:%M:%S',
+    '%Y-%m-%d',
+]
+
+
 def normalizar_data(df, coluna_origem, coluna_destino, formato='%d/%m/%Y %H:%M'):
-    """Converte e formata coluna de data"""
-    df[coluna_destino] = pd.to_datetime(
-        df[coluna_origem], format=formato, errors='coerce'
-    ).dt.strftime('%d/%m/%Y')
+    """
+    Converte e formata coluna de data para DD/MM/YYYY.
+
+    Tenta primeiro o `formato` informado; as linhas que não casarem são
+    re-tentadas com FORMATOS_DATA_FALLBACK (ex.: export Pagar.me em ISO
+    '2026-10-01 00:01:27'). Evita que uma mudança de formato no arquivo
+    de origem zere silenciosamente a coluna inteira.
+    """
+    origem = df[coluna_origem].astype('string').str.strip()
+    datas = pd.to_datetime(origem, format=formato, errors='coerce')
+
+    for fmt in FORMATOS_DATA_FALLBACK:
+        faltando = datas.isna() & origem.notna() & (origem != '')
+        if not faltando.any():
+            break
+        if fmt == formato:
+            continue
+        datas.loc[faltando] = pd.to_datetime(
+            origem[faltando], format=fmt, errors='coerce'
+        )
+
+    nao_convertidas = (datas.isna() & origem.notna() & (origem != '')).sum()
+    if nao_convertidas:
+        exemplo = origem[datas.isna() & origem.notna()].iloc[0]
+        print(f"   ⚠ {nao_convertidas} data(s) em '{coluna_origem}' não reconhecida(s) "
+              f"(ex.: '{exemplo}')")
+
+    df[coluna_destino] = datas.dt.strftime('%d/%m/%Y')
     return df
 
 
