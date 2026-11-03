@@ -10,7 +10,7 @@ project_root_path = '/content/etl_adquirentes'
 if project_root_path not in sys.path:
     sys.path.insert(0, project_root_path)
 from config.settings import PATHS, PAGARME_FILES
-from utils.normalizacao import converter_centavos_para_reais
+from utils.normalizacao import converter_centavos_para_reais, normalizar_data
 from utils.leitura_arquivos import detectar_e_ler_arquivo, salvar_arquivo_excel_ou_csv
 
 
@@ -68,9 +68,12 @@ def transformar_estornos_pagarme():
                 print(f"   Colunas disponíveis: {list(df.columns)}")
                 continue
 
-            df['Data'] = pd.to_datetime(
-                df[coluna_data], format=formato_data, errors='coerce'
-            ).dt.strftime('%d/%m/%Y')
+            df = normalizar_data(
+                df,
+                coluna_origem=coluna_data,
+                coluna_destino='Data',
+                formato=formato_data
+            )
 
             df['EC'] = ec_name
             df['Adquirente'] = 'Pagar.me'

@@ -10,6 +10,7 @@ project_root_path = '/content/etl_adquirentes'
 if project_root_path not in sys.path:
     sys.path.insert(0, project_root_path)
 from config.settings import PATHS, PAGARME_FILES
+from utils.normalizacao import normalizar_data
 from utils.leitura_arquivos import detectar_e_ler_arquivo, salvar_arquivo_excel_ou_csv
 from utils.validacao import validar_quantidade_parcelas_chargebacks, exibir_relatorio_validacao
 
@@ -53,9 +54,12 @@ def transformar_chargebacks_pagarme():
 
             coluna_data = 'Chargeback_Date' if 'Chargeback_Date' in df.columns else 'Created_Date'
 
-            df['Data'] = pd.to_datetime(
-                df[coluna_data], format='%d/%m/%Y %H:%M', errors='coerce'
-            ).dt.strftime('%d/%m/%Y')
+            df = normalizar_data(
+                df,
+                coluna_origem=coluna_data,
+                coluna_destino='Data',
+                formato='%d/%m/%Y %H:%M'
+            )
 
             df['EC'] = ec_name
             df['Adquirente'] = 'Pagar.me'
