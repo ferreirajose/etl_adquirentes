@@ -19,6 +19,22 @@ def agregar_transacoes(df, coluna_data, colunas_agrupamento_extras, colunas_valo
 
     colunas_agrupamento = ['Data_temp'] + colunas_agrupamento_extras
 
+    # groupby descarta silenciosamente linhas com chave vazia (ex.: Data NaN
+    # quando o formato de data do export muda). Avisar para não perder valores.
+    descartadas = df[colunas_agrupamento].isna().any(axis=1)
+    if descartadas.any():
+        total = len(df)
+        print(f"   ⚠ {descartadas.sum()} de {total} linha(s) descartada(s) na agregação "
+              f"por chave vazia:")
+        for col in colunas_agrupamento:
+            n = df[col].isna().sum()
+            if n:
+                nome = coluna_data if col == 'Data_temp' else col
+                print(f"      - '{nome}' vazia em {n} linha(s)")
+        if descartadas.all():
+            print("   ✗ TODAS as linhas foram descartadas — verifique o formato das datas "
+                  "do arquivo de origem")
+
     agg_dict = {**colunas_valores, 'Data_temp': 'count'}
 
     resultado = (df.groupby(colunas_agrupamento)
